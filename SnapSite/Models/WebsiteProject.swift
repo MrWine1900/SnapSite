@@ -2,6 +2,7 @@
 // SnapSite · Core Domain Model
 
 import SwiftUI
+import UIKit
 
 // MARK: - Business Info
 

@@ -120,25 +120,24 @@ struct WebsiteGenerationView: View {
 
     private var progressBar: some View {
         VStack(spacing: 8) {
-            ZStack(alignment: .leading) {
-                Capsule()
-                    .fill(Color.white.opacity(0.08))
-                    .frame(height: 6)
+            GeometryReader { geo in
+                ZStack(alignment: .leading) {
+                    Capsule()
+                        .fill(Color.white.opacity(0.08))
 
-                Capsule()
-                    .fill(
-                        LinearGradient(
-                            colors: [Color(hex: "#4F46E5"), Color(hex: "#818CF8")],
-                            startPoint: .leading,
-                            endPoint: .trailing
+                    Capsule()
+                        .fill(
+                            LinearGradient(
+                                colors: [Color(hex: "#4F46E5"), Color(hex: "#818CF8")],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
                         )
-                    )
-                    .frame(
-                        width: max(6, UIScreen.main.bounds.width * 0.8 * vm.generationProgress),
-                        height: 6
-                    )
-                    .animation(.easeInOut(duration: 0.6), value: vm.generationProgress)
+                        .frame(width: max(6, geo.size.width * vm.generationProgress))
+                        .animation(.easeInOut(duration: 0.6), value: vm.generationProgress)
+                }
             }
+            .frame(height: 6)
 
             Text("\(Int(vm.generationProgress * 100))%")
                 .font(.system(size: 12, weight: .medium, design: .monospaced))
