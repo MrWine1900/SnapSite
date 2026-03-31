@@ -3,6 +3,7 @@
 // User fills in basic info → AI generates a website preview
 
 import SwiftUI
+import UIKit
 import PhotosUI
 
 struct GeneratorView: View {

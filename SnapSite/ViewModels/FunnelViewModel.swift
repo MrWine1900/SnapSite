@@ -63,31 +63,37 @@ final class FunnelViewModel: ObservableObject {
         showWebsitePreview = false
         generationProgress = 0.0
 
-        let timeline: [(delay: Double, progress: Double, phase: GenerationPhase)] = [
-            (0.0,  0.05, .scanning),
-            (0.8,  0.30, .scanning),
-            (1.6,  0.55, .designing),
-            (2.4,  0.72, .optimising),
-            (3.2,  0.88, .finalising),
-            (4.0,  1.00, .finalising),
+        Task {
+            await runGenerationSequence()
+        }
+    }
+
+    private func runGenerationSequence() async {
+        let steps: [(nanoseconds: UInt64, progress: Double, phase: GenerationPhase)] = [
+            (0,                 0.05, .scanning),
+            (800_000_000,       0.30, .scanning),
+            (800_000_000,       0.55, .designing),
+            (800_000_000,       0.72, .optimising),
+            (800_000_000,       0.88, .finalising),
+            (800_000_000,       1.00, .finalising),
         ]
 
-        for step in timeline {
-            DispatchQueue.main.asyncAfter(deadline: .now() + step.delay) {
-                withAnimation(.easeInOut(duration: 0.6)) {
-                    self.generationProgress = step.progress
-                    self.generationPhase    = step.phase
-                }
+        for step in steps {
+            if step.nanoseconds > 0 {
+                try? await Task.sleep(nanoseconds: step.nanoseconds)
+            }
+            withAnimation(.easeInOut(duration: 0.6)) {
+                self.generationProgress = step.progress
+                self.generationPhase    = step.phase
             }
         }
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + 4.6) {
-            withAnimation(.spring(response: 0.7, dampingFraction: 0.75)) {
-                self.generationPhase   = .done
-                self.generatedWebsite  = GeneratedWebsite.mock(for: self.businessInfo)
-                self.isGenerating      = false
-                self.showWebsitePreview = true
-            }
+        try? await Task.sleep(nanoseconds: 600_000_000)
+        withAnimation(.spring(response: 0.7, dampingFraction: 0.75)) {
+            self.generationPhase    = .done
+            self.generatedWebsite   = GeneratedWebsite.mock(for: self.businessInfo)
+            self.isGenerating       = false
+            self.showWebsitePreview = true
         }
     }
 
@@ -105,12 +111,13 @@ final class FunnelViewModel: ObservableObject {
         withAnimation(.easeInOut(duration: 0.45)) {
             currentStep = step
         }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+        Task {
+            try? await Task.sleep(nanoseconds: 500_000_000)
             self.isTransitioning = false
         }
     }
 
-    func proceedToDomain() { advance(to: .domain) }
+    func proceedToDomain()   { advance(to: .domain) }
     func proceedToOptimize() { advance(to: .optimize) }
 
     // ─────────────────────────────────────────────
@@ -124,9 +131,10 @@ final class FunnelViewModel: ObservableObject {
         domainResults = []
         selectedDomain = nil
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.4) {
+        Task {
+            try? await Task.sleep(nanoseconds: 1_400_000_000)
             withAnimation(.easeOut(duration: 0.4)) {
-                self.domainResults    = DomainSearchEngine.search(query: q)
+                self.domainResults     = DomainSearchEngine.search(query: q)
                 self.isSearchingDomain = false
             }
         }
@@ -138,9 +146,7 @@ final class FunnelViewModel: ObservableObject {
         }
     }
 
-    var canProceedToOptimize: Bool {
-        selectedDomain != nil || domainResults.isEmpty == false
-    }
+    var canProceedToOptimize: Bool { !domainResults.isEmpty }
 
     // ─────────────────────────────────────────────
     // MARK: Step 3 — Plan Selection & Checkout
@@ -159,8 +165,8 @@ final class FunnelViewModel: ObservableObject {
 
     func processApplePayment() {
         isProcessingPayment = true
-        // Simulated payment processing
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+        Task {
+            try? await Task.sleep(nanoseconds: 2_000_000_000)
             withAnimation {
                 self.isProcessingPayment = false
                 self.checkoutComplete    = true
@@ -176,8 +182,7 @@ final class FunnelViewModel: ObservableObject {
     var totalInvestment: Double {
         guard let plan = selectedPlan else { return 0 }
         var total = plan.investment
-        // If plan doesn't include domain and user selected one, add the domain fee
-        if !plan.tier.includesDomain, let domain = selectedDomain {
+        if plan.tier == .essential, let domain = selectedDomain {
             total += domain.annualFee
         }
         return total
@@ -190,16 +195,5 @@ final class FunnelViewModel: ObservableObject {
         fmt.currencySymbol = "€"
         fmt.maximumFractionDigits = 0
         return fmt.string(from: NSNumber(value: totalInvestment)) ?? "€\(Int(totalInvestment))"
-    }
-}
-
-// MARK: - PlanTier helper
-
-private extension PlanTier {
-    var includesDomain: Bool {
-        switch self {
-        case .essential: return false
-        case .customized, .pro, .plusPlus: return true
-        }
     }
 }

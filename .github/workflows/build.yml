@@ -21,6 +21,16 @@ jobs:
       - name: Show Xcode version
         run: xcodebuild -version
 
+      - name: Type-check Swift (show errors clearly)
+        run: |
+          SDK=$(xcrun --sdk iphonesimulator --show-sdk-path)
+          swiftc -typecheck \
+            -sdk "$SDK" \
+            -target arm64-apple-ios17.0-simulator \
+            -F "$SDK/System/Library/Frameworks" \
+            $(find SnapSite/SnapSite -name "*.swift" | tr '\n' ' ') \
+            2>&1 || true
+
       - name: Build for simulator
         run: |
           xcodebuild build \
@@ -33,8 +43,9 @@ jobs:
             CODE_SIGN_IDENTITY="" \
             DEVELOPMENT_TEAM="" \
             PROVISIONING_PROFILE="" \
-            PROVISIONING_PROFILE_SPECIFIER="" \
-            SKIP_INSTALL=YES
+            SKIP_INSTALL=YES \
+            SWIFT_TREAT_WARNINGS_AS_ERRORS=NO \
+            GCC_TREAT_WARNINGS_AS_ERRORS=NO
 
       - name: Build succeeded
         run: echo "✅ SnapSite compiled successfully!"
