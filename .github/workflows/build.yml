@@ -21,20 +21,18 @@ jobs:
       - name: Show Xcode version
         run: xcodebuild -version
 
-      - name: List available simulators
-        run: xcrun simctl list devices available
-
       - name: Build for simulator
         run: |
-          xcodebuild build-for-testing \
+          xcodebuild build \
             -project SnapSite.xcodeproj \
             -scheme SnapSite \
-            -destination 'generic/platform=iOS Simulator' \
+            -sdk iphonesimulator \
+            -arch arm64 \
             -configuration Debug \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGN_IDENTITY="" \
-            SKIP_INSTALL=YES
+            ONLY_ACTIVE_ARCH=NO
 
       - name: Build succeeded
         run: echo "✅ SnapSite compiled successfully!"
