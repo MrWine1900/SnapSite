@@ -21,15 +21,19 @@ jobs:
       - name: Show Xcode version
         run: xcodebuild -version
 
+      - name: Install xcbeautify
+        run: brew install xcbeautify
+
       - name: Build for simulator
         run: |
+          set -o pipefail
           xcodebuild build \
             -project SnapSite.xcodeproj \
             -scheme SnapSite \
             -destination 'platform=iOS Simulator,name=iPhone 16,OS=latest' \
             -configuration Debug \
             CODE_SIGNING_ALLOWED=NO \
-            | xcpretty && exit ${PIPESTATUS[0]}
+            | xcbeautify
 
       - name: Build succeeded
         run: echo "✅ SnapSite compiled successfully!"
