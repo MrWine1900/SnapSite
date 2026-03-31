@@ -26,13 +26,15 @@ jobs:
           xcodebuild build \
             -project SnapSite.xcodeproj \
             -scheme SnapSite \
-            -sdk iphonesimulator \
-            -arch arm64 \
+            -destination 'generic/platform=iOS Simulator' \
             -configuration Debug \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGN_IDENTITY="" \
-            ONLY_ACTIVE_ARCH=NO
+            DEVELOPMENT_TEAM="" \
+            PROVISIONING_PROFILE="" \
+            PROVISIONING_PROFILE_SPECIFIER="" \
+            SKIP_INSTALL=YES
 
       - name: Build succeeded
         run: echo "✅ SnapSite compiled successfully!"
