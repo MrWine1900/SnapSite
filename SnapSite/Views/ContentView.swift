@@ -25,8 +25,8 @@ struct ContentView: View {
                 funnelBody
             }
         }
-        .onChange(of: vm.isGenerating) { generating in
-            // Nothing needed here — handled inside child views
+        .onChange(of: vm.isGenerating) { _, _ in
+            // Handled inside child views
         }
     }
 

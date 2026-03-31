@@ -32,7 +32,7 @@ struct GeneratorView: View {
             }
         }
         .background(Color(hex: "#F9FAFB").ignoresSafeArea())
-        .onChange(of: selectedItems) { items in
+        .onChange(of: selectedItems) { _, items in
             loadPhotos(from: items)
         }
         .sheet(isPresented: $showTypePicker) {
