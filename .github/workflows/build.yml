@@ -18,44 +18,20 @@ jobs:
       - name: Select Xcode
         run: sudo xcode-select -s /Applications/Xcode_16.2.app
 
-      - name: Show Xcode version
-        run: xcodebuild -version
-
-      - name: Build for simulator
-        id: xcodebuild
-        continue-on-error: true
+      - name: Build for iOS Simulator
         run: |
-          set -o pipefail
           xcodebuild build \
             -project SnapSite.xcodeproj \
             -scheme SnapSite \
             -destination 'generic/platform=iOS Simulator' \
             -configuration Debug \
-            -arch arm64 \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGN_IDENTITY="" \
             DEVELOPMENT_TEAM="" \
             SKIP_INSTALL=YES \
             SWIFT_TREAT_WARNINGS_AS_ERRORS=NO \
-            ONLY_ACTIVE_ARCH=YES \
-            2>&1 | tee /tmp/build.log
-          echo "exit_code=${PIPESTATUS[0]}" >> $GITHUB_OUTPUT
-
-      - name: Show Swift errors
-        if: always()
-        run: |
-          echo "========== SWIFT / BUILD ERRORS =========="
-          grep -E "error:|warning:" /tmp/build.log \
-            | grep -v "^note:" \
-            | grep -v "IDEActivityLogSection" \
-            | head -60 || echo "(no error lines found)"
-
-      - name: Fail if build failed
-        if: steps.xcodebuild.outputs.exit_code != '0'
-        run: |
-          echo "❌ Build failed with exit code ${{ steps.xcodebuild.outputs.exit_code }}"
-          exit 1
+            ONLY_ACTIVE_ARCH=YES
 
       - name: Build succeeded
-        run: echo "✅ SnapSite compiled successfully!"
+        run: echo "✅ SnapSite compiled successfully on Xcode 16.2 / iOS Simulator!"
