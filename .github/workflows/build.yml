@@ -21,31 +21,41 @@ jobs:
       - name: Show Xcode version
         run: xcodebuild -version
 
-      - name: Type-check Swift (show errors clearly)
-        run: |
-          SDK=$(xcrun --sdk iphonesimulator --show-sdk-path)
-          swiftc -typecheck \
-            -sdk "$SDK" \
-            -target arm64-apple-ios17.0-simulator \
-            -F "$SDK/System/Library/Frameworks" \
-            $(find SnapSite/SnapSite -name "*.swift" | tr '\n' ' ') \
-            2>&1 || true
-
       - name: Build for simulator
+        id: xcodebuild
+        continue-on-error: true
         run: |
+          set -o pipefail
           xcodebuild build \
             -project SnapSite.xcodeproj \
             -scheme SnapSite \
             -destination 'generic/platform=iOS Simulator' \
             -configuration Debug \
+            -arch arm64 \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGN_IDENTITY="" \
             DEVELOPMENT_TEAM="" \
-            PROVISIONING_PROFILE="" \
             SKIP_INSTALL=YES \
             SWIFT_TREAT_WARNINGS_AS_ERRORS=NO \
-            GCC_TREAT_WARNINGS_AS_ERRORS=NO
+            ONLY_ACTIVE_ARCH=YES \
+            2>&1 | tee /tmp/build.log
+          echo "exit_code=${PIPESTATUS[0]}" >> $GITHUB_OUTPUT
+
+      - name: Show Swift errors
+        if: always()
+        run: |
+          echo "========== SWIFT / BUILD ERRORS =========="
+          grep -E "error:|warning:" /tmp/build.log \
+            | grep -v "^note:" \
+            | grep -v "IDEActivityLogSection" \
+            | head -60 || echo "(no error lines found)"
+
+      - name: Fail if build failed
+        if: steps.xcodebuild.outputs.exit_code != '0'
+        run: |
+          echo "❌ Build failed with exit code ${{ steps.xcodebuild.outputs.exit_code }}"
+          exit 1
 
       - name: Build succeeded
         run: echo "✅ SnapSite compiled successfully!"
