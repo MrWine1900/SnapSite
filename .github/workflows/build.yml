@@ -30,7 +30,7 @@ jobs:
           xcodebuild build \
             -project SnapSite.xcodeproj \
             -scheme SnapSite \
-            -destination 'platform=iOS Simulator,name=iPhone 16,OS=latest' \
+            -destination 'generic/platform=iOS Simulator' \
             -configuration Debug \
             CODE_SIGNING_ALLOWED=NO \
             | xcbeautify
